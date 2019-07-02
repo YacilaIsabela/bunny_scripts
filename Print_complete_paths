@@ -1,0 +1,22 @@
+#! /bin/bash
+#Attention:This file should be in the correct path
+
+path=`pwd`
+
+if [[ -n $1 ]] ;then
+  if [ -d $1 ] ;then
+    path=$1
+  fi
+fi
+echo "Will use path: "${path}
+
+echo "starting"
+dirs=`ls -d ${path}/RS/_*.nii/`
+for dir in $dirs
+do
+  id=`basename $dir`
+
+echo ${dir}
+
+done
+
