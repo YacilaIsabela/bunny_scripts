@@ -1,0 +1,42 @@
+#! /bin/bash
+
+path="./"  # change path accordingly
+
+if [[ -n $1 ]]; then
+  if [ -d $1 ]; then
+    path=$1
+  fi
+fi
+echo "Using this path: " $path
+
+dirs=`ls -d ${path}/RS_*_Melodic.ica/`
+
+for dir in $dirs; do
+  id=`basename $dir | cut -d_ -f2`
+ 
+# Comment the WM and uncomment the CSF T1 for posterior analyses.
+
+ #T1WM=${dir}T1/${id}_WM80.nii.gz 
+ T1CSF=${dir}T1/${id}_CSF80.nii.gz 
+ ref=${dir}example_func.nii.gz
+ init=${dir}reg/highres2example_func.mat
+ meant=${dir}RS_${id}_simple_feat.feat/filtered_func_data.nii.gz 
+ mc=${dir}mc/prefiltered_func_data_mcf.par
+
+# Uncommend the echo and change accordingly to see whether the script recognises the paths
+#echo  $T1WM 
+ flirt -in $T1CSF -ref $ref -init $init -applyxfm -out ${dir}${id}_thr_func_csf  
+     
+ #flirt -in $T1WM -ref $ref -init $init -applyxfm -out ${dir}${id}_thr_func_wm
+
+fslmaths ${dir}${id}_thr_func_csf -thr 0.9 -bin ${dir}${id}_thr_func_csf_bin
+
+ #fslmaths ${dir}${id}_thr_func_wm -thr 0.9 -bin ${dir}${id}_thr_func_wm_bin
+
+fslmeants -i $meant -o ${dir}${id}_CSF.txt -m ${dir}${id}_thr_func_csf_bin.nii.gz 
+
+#fslmeants -i $meant -o ${dir}${id}_WM.txt -m ${dir}${id}_thr_func_wm_bin.nii.gz 
+
+paste ${dir}${id}_CSF.txt ${dir}${id}_WM.txt $mc > ${dir}${id}_conf.txt
+
+done
