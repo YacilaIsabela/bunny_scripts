@@ -1,0 +1,48 @@
+#!/bin/bash
+
+path="./"
+if [[ -n $1 ]]; then
+   if [ -d $1 ]; then
+       path=$1
+   fi
+fi
+echo "Using this path: " $path
+
+# Change the paths` names accordingly
+
+dir=`ls -d ${path}/DWI/dwi_*/`
+
+for dir in $dirs; do
+id=`basename $dir`
+
+pattern_1=${dir}${id}dwi_2/AP_PA_topup/b1000/dwi_AP_b1000_shuff.nii
+pattern_2=${dir}${id}dwi.........dwi_PA_b1000_b0.nii  
+echo $pattern_1
+echo $pattern_2
+
+PE_directions=/home/brain/......acquisition_params.txt
+parameters=/usr/share/fsl/5.0/etc/flirtsch/b02b0.cnf
+bvecs=${dir}${id}dwi_AP_b1000_shuff.bvec
+bvals=${dir}${id}dwi_AP_b1000_shuff.bval
+
+  fslroi $pattern_1 ${dir}dwi_AP_b1000_b0  0 7
+
+# comment and uncomment accordingly
+
+fslmerge -t ${dir}both_AP_PA_b0s_b1000.nii.gz ${dir}dwi_AP_b1000_b0 $pattern_2 
+
+topup  --imain=${dir}both_AP_PA_b0s_b1000.nii.gz  --datain=$PE_directions --config=$parameters --out=${dir}topup_ap_pa --logout=ap_pa_logfile --iout=${dir}ap_pa_b1000_unwarped_images --fout=topup_ap_pa_field --verbose
+
+applytopup --imain=$pattern_1 --datain=$PE_directions  --inindex=1 --topup=${dir}topup_ap_pa --method=jac --out=applytopup_corrected_images
+
+fslmaths ${dir}ap_pa_b1000_unwarped_images -Tmean ${dir}ap_pa_b1000_unwarped_images_Tmean
+
+ bet ${dir}ap_pa_b1000_unwarped_images_Tmean ${dir}ap_pa_b1000_unwarped_images_brain.nii.gz  -m -f 0.35
+
+#indx=""
+#for ((i=1; i<=67; i+=1)); do indx="$indx 1";
+#echo $indx > index.txt
+
+eddy --imain=$pattern_1 --mask=${dir}ap_pa_b1000_unwarped_images_brain_mask.nii.gz --acqp=$PE_directions --#index=index.txt --bvecs=$bvecs --bvals=$bvals --topup=${dir}topup_ap_pa --out=${dir}eddy_corrected_dwi_b1000 --#flm=quadratic --resamp=jac --verbose
+
+  done
