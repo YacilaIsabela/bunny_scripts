@@ -1,0 +1,23 @@
+#! /bin/bash
+
+path="./"
+
+if [[ -n $1 ]]; then
+  if [ -d $1 ]; then
+    path=$1
+  fi
+fi
+echo "Using this path: " $path
+
+dirs=`ls -d ${path}*_run2.nii`
+  for dir in $dirs; do
+  
+  id=`basename ${dir} | cut -c 13-16`
+ 
+
+ echo ${id}
+fsl_motion_outliers -i ${dir} -o ${id}_FD2_glm9.txt -s ${id}_FD2_values9.txt  --fd --thresh=0.9
+
+sed -i '294,310d' ${id}_FD2_glm9.txt
+
+done
