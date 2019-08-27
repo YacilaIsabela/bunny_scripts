@@ -1,0 +1,28 @@
+#! /bin/bash
+
+#path="./"
+
+if [[ -n $1 ]]; then
+  if [ -d $1 ]; then
+    path=$1
+  fi
+fi
+echo "Using this path: " $path
+
+dirs=`ls -d ${path}*_run*.nii`
+
+for dir in $dirs; do
+  
+id=`basename ${dir} | cut -c 13-16`
+
+echo ${dir}
+
+fslsplit ${dir}
+
+rm vol0293.nii.gz vol0294.nii.gz vol0295.nii.gz vol0296.nii.gz vol0297.nii.gz vol0298.nii.gz vol0299.nii.gz vol0300.nii.gz vol0301.nii.gz vol0302.nii.gz vol0303.nii.gz vol0304.nii.gz vol0305.nii.gz vol0306.nii.gz vol0307.nii.gz vol0308.nii.gz vol0309.nii.gz vol0310.nii.gz
+	
+fslmerge -t ${dir} vol*
+
+rm vol*
+ 
+done
